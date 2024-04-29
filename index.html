@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <title>Chat App</title>
     <link rel="stylesheet" href="global.css" />
-
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -23,6 +22,7 @@
       #loginForm {
         display: inline-block;
         text-align: center;
+        background-color: antiquewhite;
       }
       #username {
         margin-bottom: 10px;
@@ -31,39 +31,43 @@
         list-style-type: none;
         padding: 0;
         margin-top: 20px;
-        overflow-y: auto;
-        max-height: 60vh;
+        min-height: 40vh;
+        max-height: 40vh;
         background-color: pink;
         text-align: left;
+        overflow-y: auto;
       }
       #messages li {
         margin-bottom: 10px;
-        background-color: yellow;
+        background-color: yellowgreen;
+        border-radius: 10%;
+        padding: 10px;
       }
       /* Düzeltme için eklenen kısım */
       #messageForm {
         display: flex;
-        flex-direction: column; /* İçeriği sütun halinde düzenle */
         align-items: center;
         margin-top: 10px;
         background-color: brown;
+        /*  padding: 10px; */
+        border-radius: 5px;
       }
-      #messageForm input,
-      #messageForm button {
-        margin-bottom: 10px; /* Input alanı ve button arasına boşluk bırak */
+      #messageForm input {
+        flex: 3;
+        margin-right: 10px;
+        margin-top: 10px;
+        border-radius: 5px;
       }
       #messageForm button {
-        width: 100px; /* Buttonun genişliğini ayarla */
+        width: 100px;
+        border-radius: 5px;
+        margin-left: 10px; /* Butonun sol tarafına boşluk bırak */
       }
     </style>
   </head>
   <body>
     <div class="login-page">
       <div class="form">
-        <form class="register-form">
-          <input type="text" placeholder="name" />
-        </form>
-
         <form id="loginForm">
           <input
             id="username"
@@ -78,16 +82,14 @@
         <ul id="messages"></ul>
 
         <form id="messageForm" style="display: none">
-          <div>
-            <input
-              id="input"
-              type="text"
-              autocomplete="off"
-              placeholder="Type a message..."
-              required
-            />
-            <button type="submit">Send</button>
-          </div>
+          <input
+            id="input"
+            type="text"
+            autocomplete="off"
+            placeholder="Type a message..."
+            required
+          />
+          <button type="submit">Send</button>
         </form>
       </div>
     </div>
@@ -101,25 +103,27 @@
       const messages = document.getElementById("messages");
 
       let username = "";
+      const allMessages = []; // Tüm mesajları sakla
 
       const ws = new WebSocket("ws://localhost:8080");
-      console.log("*********      **************");
 
       ws.onopen = function () {
         console.log("Connected to the server");
-        console.log("***********************");
       };
 
       ws.onmessage = function (event) {
         const messageData = JSON.parse(event.data);
-        //displayMessageOnScreen(messageData.name + ": " + messageData.message);
-        allMessages.push(messageData); // Yeni gelen mesajı diziye ekle
-        displayAllMessages(); // Tüm mesajları ekrana bas
+        console.log("ws.onmessage = function (event) {");
+        console.log(messageData);
+        allMessages.push(messageData);
+        displayAllMessages();
       };
 
       function displayAllMessages() {
+        // Önceki mesajları temizle
+        messages.innerHTML = "";
+        console.log("messages ds", messages);
         // Tüm mesajları ekrana bas
-        messages.innerHTML = ""; // Önceki mesajları temizle
         allMessages.forEach(function (messageData) {
           const item = document.createElement("li");
           item.textContent = messageData.name + ": " + messageData.message;
@@ -128,31 +132,38 @@
       }
 
       function displayMessageOnScreen(message) {
-        console.log("displayMessageOnScreen fonksiyonu çağrıldı");
+        console.log("displayMessageOnScreen(message)", message);
+
         const item = document.createElement("li");
-        item.textContent = message;
+        item.textContent = JSON.stringify(message);
+
         messages.appendChild(item);
+        console.log("messagesP", messages);
       }
 
       loginForm.onsubmit = function (event) {
+        console.log("loginForm.onsubmit = function (event) {");
+
         event.preventDefault();
         username = usernameInput.value;
-        console.log(" loginForm.onsubmit = function (event) {");
 
         if (username) {
           loginForm.style.display = "none";
-          messageForm.style.display = "block";
+          messageForm.style.display = "flex"; // Set the message form to flex display
         }
       };
 
       messageForm.onsubmit = function (event) {
+        console.log("messageForm.onsubmit = function (event) {");
+
         event.preventDefault();
         const message = input.value;
-        console.log("messageForm.onsubmit = function (event) {");
+
         if (message && username) {
           ws.send(JSON.stringify({ name: username, message: message }));
           input.value = "";
           displayMessageOnScreen(username + ": " + message);
+          //displayAllMessages();
         }
       };
     </script>

@@ -7,13 +7,17 @@ server.on("connection", function connection(ws) {
   console.log("Client connected");
 
   ws.on("message", function incoming(message) {
-    if (message instanceof Buffer) {
-      console.log("Received binary data");
-      console.log("Received:", message);
-      logMessage(message);
-    } else {
-      console.log("Received:", message);
-      const messageObject = JSON.parse(message);
+    try {
+      let messageObject;
+      if (!message instanceof Buffer) {
+        console.log("Received binary data");
+        // İşlemi durdur
+        return;
+      } else {
+        console.log("NOT Received binary data");
+        messageObject = JSON.parse(message);
+      }
+
       const { name, message: text } = messageObject;
 
       // Gelen mesajı diğer istemcilere iletilmek üzere yeniden düzenle
@@ -23,11 +27,15 @@ server.on("connection", function connection(ws) {
       server.clients.forEach(function each(client) {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
           client.send(outgoingMessage);
+          console.log("outgoingMessage", outgoingMessage);
         }
       });
 
       // Gelen mesajı günlüğe kaydet
+      console.log("logMessage:", messageObject);
       logMessage(messageObject);
+    } catch (error) {
+      console.error("Error processing incoming message:", error);
     }
   });
 });
