@@ -46,8 +46,8 @@ server.on("connection", function connection(ws) {
 });
 
 function saveFile(buffer) {
-  const fs = require("fs");
-  const filePath = "/path/to/save/file-" + Date.now();
+  const filePath = `./file-${Date.now()}`;
+
   fs.writeFile(filePath, buffer, (err) => {
     if (err) {
       console.error("Failed to save file", err);
@@ -55,6 +55,19 @@ function saveFile(buffer) {
       console.log("File saved successfully");
     }
   });
+}
+
+function sendFile() {
+  const file = fileInput.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      const arrayBuffer = event.target.result;
+      ws.send(arrayBuffer); // Dosya verisini direkt olarak göndermek yerine sunucuya gönderiyoruz
+      console.log("File sent");
+    };
+    reader.readAsArrayBuffer(file);
+  }
 }
 
 function logMessage(message) {
