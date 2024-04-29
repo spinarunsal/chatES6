@@ -8,110 +8,153 @@
     <style>
       body {
         font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+      #chatContainer {
+        text-align: center;
+        background-color: green;
+        padding: 20%;
+        border-radius: 10%;
+      }
+      #loginForm {
+        display: inline-block;
+        text-align: center;
+      }
+      #username {
+        margin-bottom: 10px;
       }
       #messages {
         list-style-type: none;
-        margin: 0;
         padding: 0;
+        margin-top: 20px;
+        overflow-y: auto;
+        max-height: 60vh;
+        background-color: pink;
+        text-align: left;
       }
-      #message {
+      #messages li {
         margin-bottom: 10px;
+        background-color: yellow;
       }
-      #messageForm,
-      #fileForm {
-        display: none;
-      } /* Başlangıçta mesaj ve dosya gönderme formunu gizle */
+      /* Düzeltme için eklenen kısım */
+      #messageForm {
+        display: flex;
+        flex-direction: column; /* İçeriği sütun halinde düzenle */
+        align-items: center;
+        margin-top: 10px;
+        background-color: brown;
+      }
+      #messageForm input,
+      #messageForm button {
+        margin-bottom: 10px; /* Input alanı ve button arasına boşluk bırak */
+      }
+      #messageForm button {
+        width: 100px; /* Buttonun genişliğini ayarla */
+      }
     </style>
   </head>
   <body>
-    <!-- Kullanıcı Giriş Formu -->
-    <form id="loginForm">
-      <input
-        id="username"
-        type="text"
-        placeholder="Enter your name"
-        autocomplete="off"
-        required
-      />
-      <button type="submit">Join Chat</button>
-    </form>
+    <div class="login-page">
+      <div class="form">
+        <form class="register-form">
+          <input type="text" placeholder="name" />
+        </form>
 
-    <!-- Mesajları Listelemek İçin Alan -->
-    <ul id="messages"></ul>
+        <form id="loginForm">
+          <input
+            id="username"
+            type="text"
+            placeholder="Enter your name"
+            autocomplete="off"
+            required
+          />
+          <button type="submit">Join Chat</button>
+        </form>
 
-    <!-- Mesaj Gönderme Formu -->
-    <form id="messageForm">
-      <input
-        id="input"
-        type="text"
-        autocomplete="off"
-        placeholder="Type a message..."
-        required
-      />
-      <button>Send</button>
-    </form>
+        <ul id="messages"></ul>
 
-    <!-- Dosya Gönderme Formu -->
-    <form id="fileForm" style="margin-top: 20px">
-      <input type="file" id="fileInput" />
-      <button type="button" onclick="sendFile()">Send File</button>
-    </form>
+        <form id="messageForm" style="display: none">
+          <div>
+            <input
+              id="input"
+              type="text"
+              autocomplete="off"
+              placeholder="Type a message..."
+              required
+            />
+            <button type="submit">Send</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <script>
       const loginForm = document.getElementById("loginForm");
-      const messageForm = document.getElementById("messageForm");
-      const fileForm = document.getElementById("fileForm");
-      const input = document.getElementById("input");
-      const fileInput = document.getElementById("fileInput");
-      const messages = document.getElementById("messages");
       const usernameInput = document.getElementById("username");
 
-      let username = ""; // Kullanıcı adını saklamak için değişken
+      const messageForm = document.getElementById("messageForm");
+      const input = document.getElementById("input");
+      const messages = document.getElementById("messages");
+
+      let username = "";
 
       const ws = new WebSocket("ws://localhost:8080");
+      console.log("*********      **************");
 
       ws.onopen = function () {
         console.log("Connected to the server");
+        console.log("***********************");
       };
 
       ws.onmessage = function (event) {
         const messageData = JSON.parse(event.data);
-        const item = document.createElement("li");
-        item.textContent = messageData.name + ": " + messageData.message;
-        messages.appendChild(item);
+        //displayMessageOnScreen(messageData.name + ": " + messageData.message);
+        allMessages.push(messageData); // Yeni gelen mesajı diziye ekle
+        displayAllMessages(); // Tüm mesajları ekrana bas
       };
+
+      function displayAllMessages() {
+        // Tüm mesajları ekrana bas
+        messages.innerHTML = ""; // Önceki mesajları temizle
+        allMessages.forEach(function (messageData) {
+          const item = document.createElement("li");
+          item.textContent = messageData.name + ": " + messageData.message;
+          messages.appendChild(item);
+        });
+      }
+
+      function displayMessageOnScreen(message) {
+        console.log("displayMessageOnScreen fonksiyonu çağrıldı");
+        const item = document.createElement("li");
+        item.textContent = message;
+        messages.appendChild(item);
+      }
 
       loginForm.onsubmit = function (event) {
         event.preventDefault();
         username = usernameInput.value;
+        console.log(" loginForm.onsubmit = function (event) {");
+
         if (username) {
-          loginForm.style.display = "none"; // Giriş formunu gizle
-          messageForm.style.display = "block"; // Mesaj formunu göster
-          fileForm.style.display = "block"; // Dosya gönderme formunu göster
+          loginForm.style.display = "none";
+          messageForm.style.display = "block";
         }
       };
 
       messageForm.onsubmit = function (event) {
         event.preventDefault();
         const message = input.value;
+        console.log("messageForm.onsubmit = function (event) {");
         if (message && username) {
           ws.send(JSON.stringify({ name: username, message: message }));
-          input.value = ""; // input alanını temizle
+          input.value = "";
+          displayMessageOnScreen(username + ": " + message);
         }
       };
-
-      function sendFile() {
-        const file = fileInput.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = function (event) {
-            const arrayBuffer = event.target.result;
-            ws.send(arrayBuffer);
-            console.log("File sent");
-          };
-          reader.readAsArrayBuffer(file);
-        }
-      }
     </script>
   </body>
 </html>
