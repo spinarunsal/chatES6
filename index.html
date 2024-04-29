@@ -17,9 +17,10 @@
       #message {
         margin-bottom: 10px;
       }
-      #messageForm {
+      #messageForm,
+      #fileForm {
         display: none;
-      } /* Başlangıçta mesaj formunu gizle */
+      } /* Başlangıçta mesaj ve dosya gönderme formunu gizle */
     </style>
   </head>
   <body>
@@ -50,10 +51,18 @@
       <button>Send</button>
     </form>
 
+    <!-- Dosya Gönderme Formu -->
+    <form id="fileForm" style="margin-top: 20px">
+      <input type="file" id="fileInput" />
+      <button type="button" onclick="sendFile()">Send File</button>
+    </form>
+
     <script>
       const loginForm = document.getElementById("loginForm");
       const messageForm = document.getElementById("messageForm");
+      const fileForm = document.getElementById("fileForm");
       const input = document.getElementById("input");
+      const fileInput = document.getElementById("fileInput");
       const messages = document.getElementById("messages");
       const usernameInput = document.getElementById("username");
 
@@ -61,12 +70,10 @@
 
       const ws = new WebSocket("ws://localhost:8080");
 
-      // Websocket bağlantısı açıldığında
       ws.onopen = function () {
         console.log("Connected to the server");
       };
 
-      // Mesaj alındığında
       ws.onmessage = function (event) {
         const messageData = JSON.parse(event.data);
         const item = document.createElement("li");
@@ -74,17 +81,16 @@
         messages.appendChild(item);
       };
 
-      // Kullanıcı giriş formunu işleme
       loginForm.onsubmit = function (event) {
         event.preventDefault();
         username = usernameInput.value;
         if (username) {
           loginForm.style.display = "none"; // Giriş formunu gizle
           messageForm.style.display = "block"; // Mesaj formunu göster
+          fileForm.style.display = "block"; // Dosya gönderme formunu göster
         }
       };
 
-      // Mesaj gönderme formunu işleme
       messageForm.onsubmit = function (event) {
         event.preventDefault();
         const message = input.value;
@@ -93,6 +99,19 @@
           input.value = ""; // input alanını temizle
         }
       };
+
+      function sendFile() {
+        const file = fileInput.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            const arrayBuffer = event.target.result;
+            ws.send(arrayBuffer);
+            console.log("File sent");
+          };
+          reader.readAsArrayBuffer(file);
+        }
+      }
     </script>
   </body>
 </html>

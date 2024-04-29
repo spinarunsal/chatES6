@@ -3,6 +3,7 @@ import fs from "fs";
 
 const server = new WebSocketServer({ port: 8080 });
 
+/*
 server.on("connection", (ws) => {
   console.log("New client connected");
 
@@ -30,6 +31,31 @@ server.on("connection", (ws) => {
     console.log("Client has disconnected");
   });
 });
+*/
+server.on("connection", function connection(ws) {
+  ws.on("message", function incoming(message) {
+    if (message instanceof Buffer) {
+      // Handle binary data
+      console.log("Received binary data");
+      saveFile(message);
+    } else {
+      // Handle text data
+      console.log("Received:", message);
+    }
+  });
+});
+
+function saveFile(buffer) {
+  const fs = require("fs");
+  const filePath = "/path/to/save/file-" + Date.now();
+  fs.writeFile(filePath, buffer, (err) => {
+    if (err) {
+      console.error("Failed to save file", err);
+    } else {
+      console.log("File saved successfully");
+    }
+  });
+}
 
 function logMessage(message) {
   const timestamp = new Date().toISOString();
