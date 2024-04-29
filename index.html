@@ -16,73 +16,76 @@
       #chatContainer {
         text-align: center;
         background-color: green;
-        padding: 20%;
-        border-radius: 10%;
+        padding: 20px;
+        border-radius: 10px;
       }
-      #loginForm {
+      .form {
         display: inline-block;
         text-align: center;
         background-color: antiquewhite;
+        padding: 20px;
+        border-radius: 10px;
       }
       #username {
         margin-bottom: 10px;
       }
       #messages {
-        display: none; /* Başlangıçta görünmez */
+        display: none;
         list-style-type: none;
         padding: 0;
         margin-top: 20px;
-        min-height: 40vh;
-        max-height: 40vh;
+        min-height: 200px;
+        max-height: 200px;
         background-color: pink;
         text-align: left;
         overflow-y: auto;
+        border-radius: 10px;
+        padding: 10px;
       }
       #messages li {
         margin-bottom: 10px;
         background-color: yellowgreen;
-        border-radius: 10%;
+        border-radius: 10px;
         padding: 10px;
       }
-      /* Düzeltme için eklenen kısım */
       #messageForm {
-        display: flex;
+        display: none;
         align-items: center;
         margin-top: 10px;
         background-color: brown;
-        /*  padding: 10px; */
         border-radius: 5px;
+        padding: 10px;
       }
       #messageForm input {
         flex: 3;
         margin-right: 10px;
         margin-top: 10px;
         border-radius: 5px;
+        padding: 5px;
       }
       #messageForm button {
         width: 100px;
         border-radius: 5px;
-        margin-left: 10px; /* Butonun sol tarafına boşluk bırak */
+        margin-left: 10px;
+        padding: 5px;
       }
     </style>
   </head>
   <body>
     <div class="login-page">
-      <div class="form">
+      <div class="form" id="chatContainer">
         <form id="loginForm">
           <input
             id="username"
             type="text"
-            placeholder="Enter your name"
+            placeholder="Username"
             autocomplete="off"
             required
           />
           <button type="submit">Join Chat</button>
         </form>
-
         <ul id="messages"></ul>
-
-        <form id="messageForm" style="display: none">
+        <form id="messageForm">
           <input
             id="input"
             type="text"
@@ -94,78 +97,52 @@
         </form>
       </div>
     </div>
-
     <script>
       const loginForm = document.getElementById("loginForm");
       const usernameInput = document.getElementById("username");
-
       const messageForm = document.getElementById("messageForm");
       const input = document.getElementById("input");
       const messages = document.getElementById("messages");
-
       let username = "";
-      const allMessages = []; // Tüm mesajları sakla
-
+      const allMessages = [];
       const ws = new WebSocket("ws://localhost:8080");
-
       ws.onopen = function () {
         console.log("Connected to the server");
       };
-
       ws.onmessage = function (event) {
         const messageData = JSON.parse(event.data);
-        console.log("ws.onmessage = function (event) {");
-        console.log(messageData);
         allMessages.push(messageData);
         displayAllMessages();
       };
-
       function displayAllMessages() {
-        // Önceki mesajları temizle
         messages.innerHTML = "";
-        console.log("messages ds", messages);
-        // Tüm mesajları ekrana bas
         allMessages.forEach(function (messageData) {
           const item = document.createElement("li");
           item.textContent = messageData.name + ": " + messageData.message;
           messages.appendChild(item);
         });
       }
-
       function displayMessageOnScreen(message) {
-        console.log("displayMessageOnScreen(message)", message);
-
         const item = document.createElement("li");
         item.textContent = JSON.stringify(message);
-
         messages.appendChild(item);
-        console.log("messagesP", messages);
       }
-
       loginForm.onsubmit = function (event) {
-        console.log("loginForm.onsubmit = function (event) {");
-
         event.preventDefault();
         username = usernameInput.value;
-
         if (username) {
           loginForm.style.display = "none";
-          messageForm.style.display = "flex"; // Set the message form to flex display
-          messages.style.display = "block"; // Chat alanını görünür yap
+          messageForm.style.display = "flex";
+          messages.style.display = "block";
         }
       };
-
       messageForm.onsubmit = function (event) {
-        console.log("messageForm.onsubmit = function (event) {");
-
         event.preventDefault();
         const message = input.value;
-
         if (message && username) {
           ws.send(JSON.stringify({ name: username, message: message }));
           input.value = "";
           displayMessageOnScreen(username + ": " + message);
-          //displayAllMessages();
         }
       };
     </script>
