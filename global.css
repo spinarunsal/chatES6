@@ -1,0 +1,67 @@
+input,
+button {
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+}
+
+input {
+  width: 75%;
+  margin-right: 5px; /* Input ve button arasında boşluk */
+}
+
+button {
+  width: 20%;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer; /* Butona mouse ile üzerine geldiğinde imleç şeklini değiştir */
+}
+
+button:hover {
+  background-color: #0056b3; /* Butonun üzerine gelindiğinde renk değişimi */
+}
+
+#messages {
+  list-style-type: none;
+  margin: 0;
+  padding: 10px;
+  max-height: 300px; /* Listeyi belirli bir yükseklikle sınırla */
+  overflow-y: auto; /* Yükseklik aşıldığında kaydırma çubuğu */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Kutuya hafif bir gölge ekle */
+}
+
+li {
+  margin-bottom: 8px;
+  padding: 8px;
+  background-color: #f9f9f9; /* Mesaj balonu rengi */
+  border-radius: 10px; /* Yuvarlatılmış köşeler */
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f8; /* Açık arka plan rengi */
+  padding: 20px;
+}
+
+form {
+  display: flex;
+  justify-content: space-between;
+}
+
+@media (max-width: 600px) {
+  input,
+  button {
+    width: 100%; /* Mobil cihazlarda input ve button genişliği */
+    margin-top: 5px;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  form {
+    flex-direction: column; /* Mobil cihazlarda form elemanlarını dikey olarak diz */
+  }
+}
