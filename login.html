@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Chat App</title>
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Stil dosyasını bağlayın -->
+  </head>
+  <body>
+    <div id="chatContainer">
+      <form id="loginForm">
+        <input
+          id="username"
+          type="text"
+          placeholder="Enter your name"
+          autocomplete="off"
+          required
+        />
+        <button type="submit">Join Chat</button>
+      </form>
+
+      <ul id="messages"></ul>
+
+      <form id="messageForm" style="display: none">
+        <input
+          id="input"
+          type="text"
+          autocomplete="off"
+          placeholder="Type a message..."
+          required
+        />
+        <button>Send</button>
+      </form>
+    </div>
+
+    <script src="app.js"></script>
+    <!-- JavaScript dosyasını bağlayın -->
+  </body>
+</html>

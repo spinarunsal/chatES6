@@ -17,31 +17,79 @@
       #message {
         margin-bottom: 10px;
       }
+      #messageForm {
+        display: none;
+      } /* Başlangıçta mesaj formunu gizle */
     </style>
   </head>
   <body>
+    <!-- Kullanıcı Giriş Formu -->
+    <form id="loginForm">
+      <input
+        id="username"
+        type="text"
+        placeholder="Enter your name"
+        autocomplete="off"
+        required
+      />
+      <button type="submit">Join Chat</button>
+    </form>
+
+    <!-- Mesajları Listelemek İçin Alan -->
     <ul id="messages"></ul>
-    <form id="form">
-      <input id="input" autocomplete="off" /><button>Send</button>
+
+    <!-- Mesaj Gönderme Formu -->
+    <form id="messageForm">
+      <input
+        id="input"
+        type="text"
+        autocomplete="off"
+        placeholder="Type a message..."
+        required
+      />
+      <button>Send</button>
     </form>
 
     <script>
-      const form = document.getElementById("form");
+      const loginForm = document.getElementById("loginForm");
+      const messageForm = document.getElementById("messageForm");
       const input = document.getElementById("input");
       const messages = document.getElementById("messages");
+      const usernameInput = document.getElementById("username");
+
+      let username = ""; // Kullanıcı adını saklamak için değişken
 
       const ws = new WebSocket("ws://localhost:8080");
 
+      // Websocket bağlantısı açıldığında
+      ws.onopen = function () {
+        console.log("Connected to the server");
+      };
+
+      // Mesaj alındığında
       ws.onmessage = function (event) {
+        const messageData = JSON.parse(event.data);
         const item = document.createElement("li");
-        item.textContent = event.data; // Gelen veriyi doğrudan metin olarak kullan
+        item.textContent = messageData.name + ": " + messageData.message;
         messages.appendChild(item);
       };
 
-      form.onsubmit = (event) => {
+      // Kullanıcı giriş formunu işleme
+      loginForm.onsubmit = function (event) {
         event.preventDefault();
-        if (input.value) {
-          ws.send(input.value);
+        username = usernameInput.value;
+        if (username) {
+          loginForm.style.display = "none"; // Giriş formunu gizle
+          messageForm.style.display = "block"; // Mesaj formunu göster
+        }
+      };
+
+      // Mesaj gönderme formunu işleme
+      messageForm.onsubmit = function (event) {
+        event.preventDefault();
+        const message = input.value;
+        if (message && username) {
+          ws.send(JSON.stringify({ name: username, message: message }));
           input.value = ""; // input alanını temizle
         }
       };
