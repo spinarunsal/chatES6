@@ -30,16 +30,9 @@
 
       const ws = new WebSocket("ws://localhost:8080");
 
-      // Binary türü varsayılan olarak 'blob' ayarlanmış olabilir, 'text' olarak değiştirin.
-      ws.binaryType = "arraybuffer"; // veya 'blob' kullanıyorsanız bunu 'arraybuffer' ile değiştirin
-
       ws.onmessage = function (event) {
-        const arrayBuffer = event.data;
-        const decoder = new TextDecoder("utf-8"); // UTF-8 formatında bir decoder oluştur
-        const messageText = decoder.decode(arrayBuffer); // ArrayBuffer'ı metne çevir
-
         const item = document.createElement("li");
-        item.textContent = messageText; // Metni listeye ekle
+        item.textContent = event.data; // Gelen veriyi doğrudan metin olarak kullan
         messages.appendChild(item);
       };
 
@@ -47,7 +40,7 @@
         event.preventDefault();
         if (input.value) {
           ws.send(input.value);
-          input.value = "";
+          input.value = ""; // input alanını temizle
         }
       };
     </script>

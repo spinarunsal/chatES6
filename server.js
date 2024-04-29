@@ -1,15 +1,14 @@
-const WebSocket = require("ws");
-const server = new WebSocket.Server({ port: 8080 });
+import { Server, OPEN } from "ws";
+const server = new Server({ port: 8080 });
 
 server.on("connection", (ws) => {
   console.log("New client connected");
 
   ws.on("message", (message) => {
     console.log(`Received: ${message}`);
-    // Tüm bağlı client'lara mesajı gönder
     server.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message.toString()); // Mesajı string olarak gönder
+      if (client.readyState === OPEN) {
+        client.send(message.toString()); // String olarak gönder
       }
     });
   });
