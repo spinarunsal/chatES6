@@ -110,36 +110,12 @@
       ws.onopen = function () {
         console.log("Connected to the server");
       };
-      /*
-      ws.onmessage = function (event) {
-        const messageData = JSON.parse(event.data);
-        console.log("Message received:", messageData); // Konsolda gelen mesajı loglayarak mesajın alınıp alınmadığını kontrol edin
-        if (!allMessages.some((msg) => msg.id === messageData.id)) {
-          allMessages.push(messageData);
-          displaySingleMessage(messageData);
-        }
-      };*/
-      ws.onmessage = function (event) {
-        const messageData = JSON.parse(event.data);
-        console.log("Message received:", messageData);
-        displaySingleMessage(messageData);
-      };
 
       function displaySingleMessage(messageData) {
         console.log("Displaying message on screen:", messageData);
         const item = document.createElement("li");
         console.log("Created list item:", item);
 
-        /*
-        if (messageData.name === username) {
-          item.textContent = messageData.message;
-          item.className = "sent"; // Kendi mesajlarımızı sağa hizala
-        } else {
-          item.textContent = messageData.name + ": " + messageData.message;
-          item.className = "received"; // Diğer kullanıcıların mesajlarını sola hizala
-        }
-
-        */
         item.textContent = messageData.name + ": " + messageData.message;
         item.className = messageData.name === username ? "sent" : "received";
         console.log("Configured list item:", item);
@@ -160,7 +136,7 @@
           messages.style.display = "block";
         }
       };
-
+      /*
       messageForm.onsubmit = function (event) {
         event.preventDefault();
         const message = input.value;
@@ -175,6 +151,37 @@
           // Kendi gönderdiğimiz mesajı ekrana bas
           displaySingleMessage(messageToSend);
         }
+      };
+
+      ws.onmessage = function (event) {
+        const messageData = JSON.parse(event.data);
+        console.log("Message received:", messageData);
+        displaySingleMessage(messageData);
+      }; */
+      messageForm.onsubmit = function (event) {
+        event.preventDefault();
+        const message = input.value;
+        if (message && username) {
+          const messageToSend = {
+            id: Date.now().toString(), // Benzersiz bir ID oluşturuluyor
+            name: username,
+            message: message,
+          };
+          ws.send(JSON.stringify(messageToSend)); // Sunucuya mesaj gönderiliyor
+          input.value = ""; // Input alanı temizleniyor
+          // Yerel olarak mesaj eklemek yerine, sunucudan gelen yanıtı bekleyin
+        }
+      };
+
+      ws.onmessage = function (event) {
+        const messageData = JSON.parse(event.data);
+        if (
+          messageData.name === username &&
+          !allMessages.some((msg) => msg.id === messageData.id)
+        ) {
+          allMessages.push(messageData); // Mesajı listeye ekleyin
+        }
+        displaySingleMessage(messageData); // Mesajı ekrana basın
       };
     </script>
   </body>
