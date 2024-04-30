@@ -106,43 +106,74 @@
       let username = "";
       const allMessages = [];
       const ws = new WebSocket("ws://localhost:8080");
+
       ws.onopen = function () {
         console.log("Connected to the server");
       };
+      /*
       ws.onmessage = function (event) {
         const messageData = JSON.parse(event.data);
-        allMessages.push(messageData);
-        displayAllMessages();
+        console.log("Message received:", messageData); // Konsolda gelen mesajı loglayarak mesajın alınıp alınmadığını kontrol edin
+        if (!allMessages.some((msg) => msg.id === messageData.id)) {
+          allMessages.push(messageData);
+          displaySingleMessage(messageData);
+        }
+      };*/
+      ws.onmessage = function (event) {
+        const messageData = JSON.parse(event.data);
+        console.log("Message received:", messageData);
+        displaySingleMessage(messageData);
       };
-      function displayAllMessages() {
-        messages.innerHTML = "";
-        allMessages.forEach(function (messageData) {
-          const item = document.createElement("li");
-          item.textContent = messageData.name + ": " + messageData.message;
-          messages.appendChild(item);
-        });
-      }
-      function displayMessageOnScreen(message) {
+
+      function displaySingleMessage(messageData) {
+        console.log("Displaying message on screen:", messageData);
         const item = document.createElement("li");
-        item.textContent = JSON.stringify(message);
+        console.log("Created list item:", item);
+
+        /*
+        if (messageData.name === username) {
+          item.textContent = messageData.message;
+          item.className = "sent"; // Kendi mesajlarımızı sağa hizala
+        } else {
+          item.textContent = messageData.name + ": " + messageData.message;
+          item.className = "received"; // Diğer kullanıcıların mesajlarını sola hizala
+        }
+
+        */
+        item.textContent = messageData.name + ": " + messageData.message;
+        item.className = messageData.name === username ? "sent" : "received";
+        console.log("Configured list item:", item);
+
         messages.appendChild(item);
+        console.log("Appended item to list");
+        // Scroll to the bottom every time a message is added
+        messages.scrollTop = messages.scrollHeight;
+        console.log("Scrolled to bottom");
       }
+
       loginForm.onsubmit = function (event) {
         event.preventDefault();
-        username = usernameInput.value;
+        username = usernameInput.value.trim();
         if (username) {
           loginForm.style.display = "none";
           messageForm.style.display = "flex";
           messages.style.display = "block";
         }
       };
+
       messageForm.onsubmit = function (event) {
         event.preventDefault();
         const message = input.value;
         if (message && username) {
-          ws.send(JSON.stringify({ name: username, message: message }));
+          const messageToSend = {
+            id: Date.now().toString(),
+            name: username,
+            message: message,
+          };
+          ws.send(JSON.stringify(messageToSend));
           input.value = "";
-          displayMessageOnScreen(username + ": " + message);
+          // Kendi gönderdiğimiz mesajı ekrana bas
+          displaySingleMessage(messageToSend);
         }
       };
     </script>
