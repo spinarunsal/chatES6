@@ -1,77 +1,63 @@
 import { WebSocketServer, WebSocket } from "ws";
 import fs from "fs";
-import { randomUUID } from "crypto"; // Node.js'in crypto modülünden randomUUID fonksiyonunu import ediyoruz
+import { randomUUID } from "crypto";
 
 const server = new WebSocketServer({ port: 8080 });
-const clients = new Map(); // Bağlantıları ve ilgili ID'leri saklamak için bir Map kullanıyoruz
+const clients = new Map();
 
 server.on("connection", function connection(ws) {
-  const clientId = randomUUID(); // Yeni bir bağlantı için benzersiz bir ID oluştur
-  clients.set(clientId, ws); // WebSocket bağlantısını ve ID'yi Map'e kaydet
+  const clientId = randomUUID();
+  clients.set(clientId, ws);
   console.log("Client connected with ID:", clientId);
 
   ws.on("close", () => {
     console.log("Client with ID", clientId, "has disconnected.");
-    clients.delete(clientId); // Bağlantı kapandığında ID'yi ve WebSocket'i Map'ten sil
+    clients.delete(clientId);
   });
 
   ws.on("error", (error) => console.error("WebSocket error:", error));
 
   ws.on("message", function incoming(message) {
     try {
-      if (typeof message === "string") {
-        console.log("Received text data from ID:", clientId);
-        const messageObject = JSON.parse(message);
+      const messageObject = parseMessage(message);
+      if (messageObject) {
         handleIncomingMessage(messageObject, clientId);
-      } else if (message instanceof Buffer) {
-        console.log(
-          "Received binary data from ID:",
-          clientId,
-          ", converting to text"
-        );
-        const messageText = message.toString();
-        const messageObject = JSON.parse(messageText);
-        handleIncomingMessage(messageObject, clientId);
-      } else {
-        console.log("Unsupported message type from ID:", clientId);
       }
     } catch (error) {
       console.error("Error processing message from ID:", clientId, ":", error);
     }
   });
-
-  function handleIncomingMessage(messageObject, senderId) {
-    const { name, message: text } = messageObject;
-    const outgoingMessage = JSON.stringify({ senderId, name, message: text });
-
-    console.log("Received message from ID:", senderId, ":", messageObject);
-
-    clients.forEach((client, id) => {
-      if (client.readyState === WebSocket.OPEN) {
-        // Burada WebSocket sınıfına ihtiyaç duymadan doğrudan bağlantının durumunu kontrol ediyoruz
-        client.send(outgoingMessage);
-        console.log("Sent message to client ID:", id);
-      }
-    });
-  }
-
-  function logMessage(message) {
-    const timestamp = new Date().toISOString();
-    const logEntry = `${timestamp} - ${JSON.stringify(message)}\n`;
-    fs.appendFile("chatlog/chat.log", logEntry, (err) => {
-      if (err) console.error("Error writing to log file:", err);
-    });
-  }
 });
 
-console.log("Server is running on port 8080");
-
-console.log("Server is running on port 8080");
-
-function logMessage(message) {
-  const timestamp = new Date().toISOString();
-  const logEntry = `${timestamp} - ${JSON.stringify(message)}\n`;
-  fs.appendFile("chatlog/chat.log", logEntry, (err) => {
-    if (err) console.error("Error writing to log file:", err);
-  });
+function parseMessage(message) {
+  if (typeof message === "string" || message instanceof Buffer) {
+    const messageText = message.toString();
+    return JSON.parse(messageText);
+  } else {
+    console.log("Unsupported message type");
+    return null;
+  }
 }
+
+function handleIncomingMessage(messageObject, senderId) {
+  const { name, message: text } = messageObject;
+  const outgoingMessage = JSON.stringify({ senderId, name, message: text });
+  console.log("Received message from ID:", senderId, ":", messageObject);
+
+  clients.forEach((client, id) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(outgoingMessage);
+      console.log("Sent message to client ID:", id);
+    }
+  });
+
+  // Optionally send messages to a designated monitor client
+  const monitorId = "monitor_id"; // Adjust as necessary
+  const monitor = clients.get(monitorId);
+  if (monitor && monitor.readyState === WebSocket.OPEN) {
+    monitor.send(outgoingMessage);
+    console.log("Sent message to monitor ID:", monitorId);
+  }
+}
+
+console.log("Server is running on port 8080");

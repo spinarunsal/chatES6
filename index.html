@@ -111,22 +111,6 @@
         console.log("Connected to the server");
       };
 
-      function displaySingleMessage(messageData) {
-        console.log("Displaying message on screen:", messageData);
-        const item = document.createElement("li");
-        console.log("Created list item:", item);
-
-        item.textContent = messageData.name + ": " + messageData.message;
-        item.className = messageData.name === username ? "sent" : "received";
-        console.log("Configured list item:", item);
-
-        messages.appendChild(item);
-        console.log("Appended item to list");
-        // Scroll to the bottom every time a message is added
-        messages.scrollTop = messages.scrollHeight;
-        console.log("Scrolled to bottom");
-      }
-
       loginForm.onsubmit = function (event) {
         event.preventDefault();
         username = usernameInput.value.trim();
@@ -134,9 +118,24 @@
           loginForm.style.display = "none";
           messageForm.style.display = "flex";
           messages.style.display = "block";
+          setWebSocketMessageHandler();
         }
       };
-      /*
+
+      function setWebSocketMessageHandler() {
+        if (username === "monitor") {
+          ws.onmessage = function (event) {
+            const messageData = JSON.parse(event.data);
+            displayMonitorMessage(messageData);
+          };
+        } else {
+          ws.onmessage = function (event) {
+            const messageData = JSON.parse(event.data);
+            displaySingleMessage(messageData);
+          };
+        }
+      }
+
       messageForm.onsubmit = function (event) {
         event.preventDefault();
         const message = input.value;
@@ -148,41 +147,24 @@
           };
           ws.send(JSON.stringify(messageToSend));
           input.value = "";
-          // Kendi gönderdiğimiz mesajı ekrana bas
-          displaySingleMessage(messageToSend);
         }
       };
 
-      ws.onmessage = function (event) {
-        const messageData = JSON.parse(event.data);
-        console.log("Message received:", messageData);
-        displaySingleMessage(messageData);
-      }; */
-      messageForm.onsubmit = function (event) {
-        event.preventDefault();
-        const message = input.value;
-        if (message && username) {
-          const messageToSend = {
-            id: Date.now().toString(), // Benzersiz bir ID oluşturuluyor
-            name: username,
-            message: message,
-          };
-          ws.send(JSON.stringify(messageToSend)); // Sunucuya mesaj gönderiliyor
-          input.value = ""; // Input alanı temizleniyor
-          // Yerel olarak mesaj eklemek yerine, sunucudan gelen yanıtı bekleyin
-        }
-      };
+      function displaySingleMessage(messageData) {
+        const item = document.createElement("li");
+        item.textContent = messageData.name + ": " + messageData.message;
+        item.className = messageData.name === username ? "sent" : "received";
+        messages.appendChild(item);
+        messages.scrollTop = messages.scrollHeight;
+      }
 
-      ws.onmessage = function (event) {
-        const messageData = JSON.parse(event.data);
-        if (
-          messageData.name === username &&
-          !allMessages.some((msg) => msg.id === messageData.id)
-        ) {
-          allMessages.push(messageData); // Mesajı listeye ekleyin
-        }
-        displaySingleMessage(messageData); // Mesajı ekrana basın
-      };
+      function displayMonitorMessage(messageData) {
+        const item = document.createElement("li");
+        item.textContent = `From ${messageData.name}: ${messageData.message}`;
+        item.className = "monitor";
+        messages.appendChild(item);
+        messages.scrollTop = messages.scrollHeight;
+      }
     </script>
   </body>
 </html>
