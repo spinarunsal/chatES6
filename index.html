@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat App</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="global.css" />
     <style>
       /* Genel stiller */
       body {
@@ -57,6 +57,14 @@
         padding: 10px;
       }
 
+      /* Kullanıcının kendi mesajlarını sağa hizalama */
+      .my-message {
+        background-color: lightblue;
+        align-self: flex-end;
+        display: flex;
+        justify-content: flex-end;
+      }
+
       /* Giriş formu stilleri */
       .form {
         display: inline-block;
@@ -104,13 +112,13 @@
     </style>
   </head>
   <body>
-    <div id="onlineUsers">
+    <div id="onlineUsers" style="display: none">
       <h3>Online Users</h3>
       <ul id="userList"></ul>
     </div>
 
-    <div class="login-page">
-      <div class="form" id="chatContainer">
+    <div class="login-page" id="loginPage">
+      <div class="form" id="loginFormContainer">
         <form id="loginForm">
           <input
             id="username"
@@ -119,8 +127,13 @@
             autocomplete="off"
             required
           />
-          <button type="submit">Join Chat</button>
+          <button id="joinChatButton" type="submit">Join Chat</button>
         </form>
+      </div>
+    </div>
+
+    <div class="chat-page" id="chatPage" style="display: none">
+      <div class="form" id="chatContainer">
         <ul id="messages"></ul>
         <form id="messageForm">
           <input
@@ -159,6 +172,12 @@
       function displayMessage(messageData) {
         const item = document.createElement("li");
         item.textContent = `${messageData.name}: ${messageData.message}`;
+
+        // Kullanıcının kendi mesajını sağa hizala
+        if (messageData.name === username) {
+          item.classList.add("my-message");
+        }
+
         messages.appendChild(item);
         messages.scrollTop = messages.scrollHeight; // Scroll to the bottom
       }
@@ -171,15 +190,17 @@
           userList.appendChild(userItem);
         });
       }
+      const loginPage = document.getElementById("loginPage");
+      const chatPage = document.getElementById("chatPage");
 
       loginForm.onsubmit = function (event) {
         event.preventDefault();
         username = usernameInput.value.trim();
         if (username) {
           ws.send(JSON.stringify({ type: "setUsername", username: username }));
-          loginForm.style.display = "none";
-          messageForm.style.display = "block";
-          messages.style.display = "block";
+          loginPage.style.display = "none";
+          chatPage.style.display = "block";
+          onlineUsers.style.display = "block"; // Online Users kısmını görünür yap
           setWebSocketMessageHandler();
         }
       };
