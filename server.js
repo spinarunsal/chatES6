@@ -16,7 +16,7 @@ server.on("connection", function connection(ws) {
       }) has disconnected.`
     );
     clients.delete(clientId);
-    sendUserList(); // Kullanıcı listesini güncelle
+    sendUserList();
   });
 
   ws.on("error", (error) => console.error("WebSocket error:", error));
@@ -31,7 +31,7 @@ server.on("connection", function connection(ws) {
         console.log(
           `Username set for client ID: ${clientId} -> ${client.username}`
         );
-        sendUserList(); // Kullanıcı listesini güncelle
+        sendUserList();
         break;
       case "message":
         handleIncomingMessage(messageObject, clientId);
@@ -53,7 +53,6 @@ function handleIncomingMessage(messageObject, senderId) {
     message: messageObject.message,
   });
 
-  // Tüm bağlı kullanıcılara gönder
   clients.forEach(({ ws: clientWs }) => {
     if (clientWs.readyState === WebSocket.OPEN) {
       clientWs.send(outgoingMessage);

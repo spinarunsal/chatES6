@@ -45,7 +45,7 @@
         list-style-type: none;
         padding: 0;
         margin: 0;
-        width: 100%; /* Genişliği %100 yap */
+        width: 100%;
       }
 
       #userList li {
@@ -111,7 +111,7 @@
         width: 100%;
       }
 
-      #input {
+      #mainInput {
         flex: 3;
         margin-right: 10px;
         border-radius: 5px;
@@ -130,7 +130,7 @@
       .message {
         margin-bottom: 20px;
         display: flex;
-        justify-content: flex-end; /* Mesajı sağa hizala */
+        justify-content: flex-end;
       }
 
       .photo {
@@ -192,12 +192,11 @@
       const loginForm = document.getElementById("loginForm");
       const usernameInput = document.getElementById("username");
       const messageForm = document.getElementById("messageForm");
-      const input = document.getElementById("input");
+      const mainInput = document.getElementById("mainInput");
       const messages = document.getElementById("messages");
       const userList = document.getElementById("userList");
       let username = "";
       const ws = new WebSocket("ws://localhost:8080");
-      const mainInput = document.getElementById("mainInput");
 
       mainInput.addEventListener("input", function (event) {
         const userMessage = event.target.value; // Giriş değerini al
@@ -284,9 +283,7 @@
         }
       });
 
-      // Mesajları görüntülemek için fonksiyon tanımla
-      function displayMessage(messageData, targetUser) {
-        const messageList = document.getElementById(`messages_${targetUser}`);
+      function displayMessage(messageData) {
         const item = document.createElement("li");
         item.textContent = `${messageData.name}: ${messageData.message}`;
         item.classList.add("message-text");
@@ -296,8 +293,8 @@
           item.classList.add("my-message");
         }
 
-        messageList.appendChild(item);
-        messageList.scrollTop = messageList.scrollHeight; // Scroll to the bottom
+        messages.appendChild(item);
+        messages.scrollTop = messages.scrollHeight; // Scroll to the bottom
       }
 
       function setWebSocketMessageHandler() {
@@ -338,7 +335,7 @@
 
       messageForm.onsubmit = function (event) {
         event.preventDefault();
-        const message = input.value.trim();
+        const message = mainInput.value.trim(); // Değişiklik burada yapıldı
         if (message) {
           ws.send(
             JSON.stringify({
@@ -347,7 +344,7 @@
               message: message,
             })
           );
-          input.value = "";
+          mainInput.value = ""; // Değişiklik burada yapıldı
         }
       };
     </script>
