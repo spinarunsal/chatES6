@@ -16,33 +16,61 @@
         margin: 0;
       }
 
-      /* Sol sütun stilleri */
-      #onlineUsers {
-        background-color: #ccc;
-        width: 200px;
-        padding: 10px;
-        border-radius: 10px;
-      }
-
       /* Sağ sütun stilleri */
       #chatContainer {
-        text-align: center;
-        background-color: green;
-        padding: 20px;
+        width: 80%;
+        padding: 10px;
+        display: flex;
+        align-items: stretch;
+      }
+
+      #onlineUsers {
+        background-color: white;
+        padding-top: 100px;
+        height: 350px;
+        min-width: 150px;
+        padding: 10px;
         border-radius: 10px;
+        min-height: 20px;
+        overflow-y: auto; /* Scroll bar ekle */
+        overflow-x: auto;
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: flex-start; /* Yanındaki alanla hizala */
+      }
+
+      #userList {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        width: 100%; /* Genişliği %100 yap */
+      }
+
+      #userList li {
+        padding: 5px;
+        margin-bottom: 5px;
+        background-color: #f0f0f0;
+        border-radius: 5px;
       }
 
       /* Sohbet alanı stilleri */
+      #chatContainer #chat {
+        flex: 1;
+
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column; /*
+        background-color: pink;*/
+      }
+
       #messages {
         list-style-type: none;
         padding: 0;
         margin-top: 20px;
+
         min-height: 200px;
         max-height: 200px;
-        background-color: pink;
+        background-color: #fff;
         text-align: left;
         overflow-y: auto;
         border-radius: 10px;
@@ -52,24 +80,21 @@
 
       #messages li {
         margin-bottom: 10px;
-        background-color: yellowgreen;
         border-radius: 10px;
         padding: 10px;
       }
 
       /* Kullanıcının kendi mesajlarını sağa hizalama */
       .my-message {
-        background-color: lightblue;
+        background-color: #f0f0f0;
         align-self: flex-end;
-        display: flex;
-        justify-content: flex-end;
       }
 
       /* Giriş formu stilleri */
       .form {
         display: inline-block;
         text-align: center;
-        background-color: antiquewhite;
+        background-color: #fff;
         padding: 20px;
         border-radius: 10px;
         margin-top: 20px;
@@ -89,9 +114,6 @@
         display: flex;
         align-items: center;
         margin-top: 10px;
-        background-color: brown;
-        border-radius: 5px;
-        padding: 10px;
         width: 100%;
       }
 
@@ -109,42 +131,67 @@
         padding: 10px;
         cursor: pointer;
       }
+
+      /* Sohbet alanı stilleri */
+      .message {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: flex-end; /* Mesajı sağa hizala */
+      }
+
+      .photo {
+        width: 50px;
+        height: 50px;
+        background-color: #e6e7ed;
+        border-radius: 50%;
+        margin-right: 10px; /* Fotoğrafı sağa hizala */
+      }
+
+      .message-text {
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: right; /* İçeriği sağa hizala */
+      }
     </style>
   </head>
   <body>
-    <div id="onlineUsers" style="display: none">
-      <h3>Online Users</h3>
-      <ul id="userList"></ul>
-    </div>
-
-    <div class="login-page" id="loginPage">
-      <div class="form" id="loginFormContainer">
-        <form id="loginForm">
-          <input
-            id="username"
-            type="text"
-            placeholder="Username"
-            autocomplete="off"
-            required
-          />
-          <button id="joinChatButton" type="submit">Join Chat</button>
-        </form>
+    <div id="chatContainer">
+      <div id="onlineUsers" style="display: none">
+        <h3>Online Users</h3>
+        <ul id="userList"></ul>
       </div>
-    </div>
 
-    <div class="chat-page" id="chatPage" style="display: none">
-      <div class="form" id="chatContainer">
-        <ul id="messages"></ul>
-        <form id="messageForm">
-          <input
-            id="input"
-            type="text"
-            autocomplete="off"
-            placeholder="Type a message..."
-            required
-          />
-          <button id="sendButton" type="submit">Send</button>
-        </form>
+      <div class="login-page" id="loginPage">
+        <div class="form" id="loginFormContainer">
+          <form id="loginForm">
+            <input
+              id="username"
+              type="text"
+              placeholder="Username"
+              autocomplete="off"
+              required
+            />
+            <button id="joinChatButton" type="submit">Join Chat</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="chat-page" id="chatPage" style="display: none">
+        <div class="form" id="chat">
+          <ul id="messages"></ul>
+          <form id="messageForm">
+            <input
+              id="input"
+              type="text"
+              autocomplete="off"
+              placeholder="Type a message..."
+              required
+            />
+            <button id="sendButton" type="submit">Send</button>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -172,6 +219,7 @@
       function displayMessage(messageData) {
         const item = document.createElement("li");
         item.textContent = `${messageData.name}: ${messageData.message}`;
+        item.classList.add("message-text");
 
         // Kullanıcının kendi mesajını sağa hizala
         if (messageData.name === username) {
