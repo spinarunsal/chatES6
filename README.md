@@ -1,5 +1,7 @@
 # chatES6
 
+Run command: node server.js
+
 This code creates a WebSocket server and communicates with clients (users). Let's explain how functions and events work step by step:
 
 ## WebSocket and Server Creation:
