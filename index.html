@@ -84,8 +84,7 @@
           />
           <button type="submit">Join Chat</button>
         </form>
-        <ul id="messages"></ul>
-        <form id="messageForm">
+        <form id="messageForm" style="display: none">
           <input
             id="input"
             type="text"
@@ -95,6 +94,7 @@
           />
           <button type="submit">Send</button>
         </form>
+        <ul id="messages"></ul>
       </div>
     </div>
     <script>
@@ -104,12 +104,7 @@
       const input = document.getElementById("input");
       const messages = document.getElementById("messages");
       let username = "";
-      const allMessages = [];
       const ws = new WebSocket("ws://localhost:8080");
-
-      ws.onopen = function () {
-        console.log("Connected to the server");
-      };
 
       loginForm.onsubmit = function (event) {
         event.preventDefault();
@@ -118,30 +113,19 @@
           loginForm.style.display = "none";
           messageForm.style.display = "flex";
           messages.style.display = "block";
+          // Kullanıcı adını sunucuya gönder
+          ws.send(JSON.stringify({ type: "setUsername", username: username }));
+
           setWebSocketMessageHandler();
         }
       };
-
-      function setWebSocketMessageHandler() {
-        if (username === "monitor") {
-          ws.onmessage = function (event) {
-            const messageData = JSON.parse(event.data);
-            displayMonitorMessage(messageData);
-          };
-        } else {
-          ws.onmessage = function (event) {
-            const messageData = JSON.parse(event.data);
-            displaySingleMessage(messageData);
-          };
-        }
-      }
 
       messageForm.onsubmit = function (event) {
         event.preventDefault();
         const message = input.value;
         if (message && username) {
           const messageToSend = {
-            id: Date.now().toString(),
+            type: "message",
             name: username,
             message: message,
           };
@@ -150,18 +134,16 @@
         }
       };
 
-      function displaySingleMessage(messageData) {
-        const item = document.createElement("li");
-        item.textContent = messageData.name + ": " + messageData.message;
-        item.className = messageData.name === username ? "sent" : "received";
-        messages.appendChild(item);
-        messages.scrollTop = messages.scrollHeight;
+      function setWebSocketMessageHandler() {
+        ws.onmessage = function (event) {
+          const messageData = JSON.parse(event.data);
+          displayMessage(messageData);
+        };
       }
 
-      function displayMonitorMessage(messageData) {
+      function displayMessage(messageData) {
         const item = document.createElement("li");
-        item.textContent = `From ${messageData.name}: ${messageData.message}`;
-        item.className = "monitor";
+        item.textContent = `${messageData.name}: ${messageData.message}`;
         messages.appendChild(item);
         messages.scrollTop = messages.scrollHeight;
       }
