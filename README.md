@@ -40,7 +40,7 @@ This code creates a WebSocket server and communicates with clients (users). Let'
 
 ---
 
-This HTML file creates a user interface for the client side of a chat application. Let's explain its functionality and features:
+HTML file creates a user interface for the client side of a chat application. Let's explain its functionality and features:
 
 ## General Styles:
 
