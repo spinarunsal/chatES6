@@ -199,7 +199,7 @@
       const ws = new WebSocket("ws://localhost:8080");
 
       mainInput.addEventListener("input", function (event) {
-        const userMessage = event.target.value; // Giriş değerini al
+        const userMessage = event.target.value;
         console.log(`Keystrokes from ${username}: ${userMessage}`);
         // Alınan giriş değerini dilediğiniz şekilde kullanabilirsiniz, örneğin ekrana yazdırabilirsiniz
       });
@@ -237,10 +237,7 @@
         newForm.appendChild(newInput);
         newForm.appendChild(newCloseButton);
 
-        // Formu yeni sohbet sayfasına ekle
         newChatPage.appendChild(newForm);
-
-        // Sohbet sayfasını görünecek yere ekle
         chatContainer.appendChild(newChatPage);
 
         // WebSocket mesajlarını işlemek için fonksiyon tanımla
@@ -275,7 +272,6 @@
       }
 
       userList.addEventListener("click", function (event) {
-        // Sadece <li> öğelerine tıklandığında işlem yap
         if (event.target.tagName === "LI" && username === "admin") {
           // Tıklanan kullanıcının adını al
           const targetUser = event.target.textContent.trim();
@@ -294,7 +290,7 @@
         }
 
         messages.appendChild(item);
-        messages.scrollTop = messages.scrollHeight; // Scroll to the bottom
+        messages.scrollTop = messages.scrollHeight;
       }
 
       function setWebSocketMessageHandler() {
@@ -309,7 +305,7 @@
       }
 
       function updateUserList(users) {
-        userList.innerHTML = ""; // Clear existing list
+        userList.innerHTML = "";
         users.forEach((user) => {
           const userItem = document.createElement("li");
           userItem.textContent = user;
@@ -335,7 +331,7 @@
 
       messageForm.onsubmit = function (event) {
         event.preventDefault();
-        const message = mainInput.value.trim(); // Değişiklik burada yapıldı
+        const message = mainInput.value.trim();
         if (message) {
           ws.send(
             JSON.stringify({
@@ -344,7 +340,7 @@
               message: message,
             })
           );
-          mainInput.value = ""; // Değişiklik burada yapıldı
+          mainInput.value = "";
         }
       };
     </script>
