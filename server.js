@@ -101,10 +101,11 @@ server.on("connection", function connection(ws) {
       }) has disconnected.`
     );
     clients.delete(clientId);
+    sendUserList(); // Kullanıcı listesini güncelle
   });
 
   ws.on("error", (error) => console.error("WebSocket error:", error));
-  /*
+
   ws.on("message", function incoming(message) {
     const messageObject = JSON.parse(message);
     const client = clients.get(clientId);
@@ -115,44 +116,34 @@ server.on("connection", function connection(ws) {
         console.log(
           `Username set for client ID: ${clientId} -> ${client.username}`
         );
+        sendUserList(); // Kullanıcı listesini güncelle
+        break;
+      case "message":
+        handleIncomingMessage(messageObject, clientId);
         break;
       case "keystroke":
         handleKeystroke(messageObject, client);
         break;
       default:
-        handleIncomingMessage(messageObject, clientId);
-        break;
-    }
-  });
-  */
-  ws.on("message", function incoming(message) {
-    const messageObject = JSON.parse(message);
-    const client = clients.get(clientId);
-
-    switch (messageObject.type) {
-      case "setUsername":
-        client.username = messageObject.username;
-        console.log(
-          `Username set for client ID: ${clientId} -> ${client.username}`
-        );
-        break;
-      case "message":
-        const outgoingMessage = JSON.stringify({
-          type: "message",
-          name: client.username || "Anonymous",
-          message: messageObject.message,
-        });
-        // Tüm bağlı müşterilere mesaj gönder
-        clients.forEach(({ ws: clientWs }, id) => {
-          if (clientWs.readyState === WebSocket.OPEN) {
-            clientWs.send(outgoingMessage);
-          }
-        });
-        break;
-      // Diğer case'ler buraya eklenebilir
+        console.log("Received unknown type of message");
     }
   });
 });
+
+function handleIncomingMessage(messageObject, senderId) {
+  const sender = clients.get(senderId);
+  const outgoingMessage = JSON.stringify({
+    type: "message",
+    name: sender.username || "Anonymous",
+    message: messageObject.message,
+  });
+
+  clients.forEach(({ ws: clientWs }, id) => {
+    if (clientWs.readyState === WebSocket.OPEN) {
+      clientWs.send(outgoingMessage);
+    }
+  });
+}
 
 function handleKeystroke(messageObject, senderClient) {
   const monitor = [...clients.values()].find(
@@ -173,19 +164,6 @@ function handleKeystroke(messageObject, senderClient) {
   }
 }
 
-function handleIncomingMessage(messageObject, senderId) {
-  const { name, message } = messageObject;
-  const outgoingMessage = JSON.stringify({ senderId, name, message });
-
-  console.log("Received message from ID:", senderId, ":", messageObject);
-  clients.forEach(({ ws }, id) => {
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(outgoingMessage);
-      console.log("Sent message to client ID:", id);
-    }
-  });
-}
-
 function listConnectedUsers() {
   console.log("Currently connected clients:");
   clients.forEach(({ username }, id) => {
@@ -193,6 +171,21 @@ function listConnectedUsers() {
   });
 }
 
-setInterval(listConnectedUsers, 30000);
+function sendUserList() {
+  const userList = Array.from(clients.values()).map(
+    (client) => client.username || "Anonymous"
+  );
+  const message = JSON.stringify({
+    type: "userList",
+    users: userList,
+  });
+  clients.forEach(({ ws: clientWs }) => {
+    if (clientWs.readyState === WebSocket.OPEN) {
+      clientWs.send(message);
+    }
+  });
+}
+
+setInterval(sendUserList, 10000);
 
 console.log("Server is running on port 8080");

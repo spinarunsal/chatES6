@@ -2,9 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat App</title>
-    <link rel="stylesheet" href="global.css" />
+    <link rel="stylesheet" href="style.css" />
     <style>
+      /* Genel stiller */
       body {
         font-family: Arial, sans-serif;
         display: flex;
@@ -13,24 +15,28 @@
         height: 100vh;
         margin: 0;
       }
+
+      /* Sol sütun stilleri */
+      #onlineUsers {
+        background-color: #ccc;
+        width: 200px;
+        padding: 10px;
+        border-radius: 10px;
+      }
+
+      /* Sağ sütun stilleri */
       #chatContainer {
         text-align: center;
         background-color: green;
         padding: 20px;
         border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
-      .form {
-        display: inline-block;
-        text-align: center;
-        background-color: antiquewhite;
-        padding: 20px;
-        border-radius: 10px;
-      }
-      #username {
-        margin-bottom: 10px;
-      }
+
+      /* Sohbet alanı stilleri */
       #messages {
-        display: none;
         list-style-type: none;
         padding: 0;
         margin-top: 20px;
@@ -41,37 +47,68 @@
         overflow-y: auto;
         border-radius: 10px;
         padding: 10px;
+        width: 100%;
       }
+
       #messages li {
         margin-bottom: 10px;
         background-color: yellowgreen;
         border-radius: 10px;
         padding: 10px;
       }
+
+      /* Giriş formu stilleri */
+      .form {
+        display: inline-block;
+        text-align: center;
+        background-color: antiquewhite;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      #username {
+        margin-bottom: 10px;
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+
       #messageForm {
-        display: none;
+        display: flex;
         align-items: center;
         margin-top: 10px;
         background-color: brown;
         border-radius: 5px;
         padding: 10px;
+        width: 100%;
       }
-      #messageForm input {
+
+      #input {
         flex: 3;
         margin-right: 10px;
-        margin-top: 10px;
         border-radius: 5px;
-        padding: 5px;
+        padding: 10px;
+        box-sizing: border-box;
       }
-      #messageForm button {
+
+      #sendButton {
         width: 100px;
         border-radius: 5px;
-        margin-left: 10px;
-        padding: 5px;
+        padding: 10px;
+        cursor: pointer;
       }
     </style>
   </head>
   <body>
+    <div id="onlineUsers">
+      <h3>Online Users</h3>
+      <ul id="userList"></ul>
+    </div>
+
     <div class="login-page">
       <div class="form" id="chatContainer">
         <form id="loginForm">
@@ -84,7 +121,8 @@
           />
           <button type="submit">Join Chat</button>
         </form>
-        <form id="messageForm" style="display: none">
+        <ul id="messages"></ul>
+        <form id="messageForm">
           <input
             id="input"
             type="text"
@@ -92,52 +130,29 @@
             placeholder="Type a message..."
             required
           />
-          <button type="submit">Send</button>
+          <button id="sendButton" type="submit">Send</button>
         </form>
-        <ul id="messages"></ul>
       </div>
     </div>
+
     <script>
       const loginForm = document.getElementById("loginForm");
       const usernameInput = document.getElementById("username");
       const messageForm = document.getElementById("messageForm");
       const input = document.getElementById("input");
       const messages = document.getElementById("messages");
+      const userList = document.getElementById("userList");
       let username = "";
       const ws = new WebSocket("ws://localhost:8080");
 
-      loginForm.onsubmit = function (event) {
-        event.preventDefault();
-        username = usernameInput.value.trim();
-        if (username) {
-          loginForm.style.display = "none";
-          messageForm.style.display = "flex";
-          messages.style.display = "block";
-          // Kullanıcı adını sunucuya gönder
-          ws.send(JSON.stringify({ type: "setUsername", username: username }));
-
-          setWebSocketMessageHandler();
-        }
-      };
-
-      messageForm.onsubmit = function (event) {
-        event.preventDefault();
-        const message = input.value;
-        if (message && username) {
-          const messageToSend = {
-            type: "message",
-            name: username,
-            message: message,
-          };
-          ws.send(JSON.stringify(messageToSend));
-          input.value = "";
-        }
-      };
-
       function setWebSocketMessageHandler() {
         ws.onmessage = function (event) {
-          const messageData = JSON.parse(event.data);
-          displayMessage(messageData);
+          const data = JSON.parse(event.data);
+          if (data.type === "message") {
+            displayMessage(data);
+          } else if (data.type === "userList") {
+            updateUserList(data.users);
+          }
         };
       }
 
@@ -145,8 +160,44 @@
         const item = document.createElement("li");
         item.textContent = `${messageData.name}: ${messageData.message}`;
         messages.appendChild(item);
-        messages.scrollTop = messages.scrollHeight;
+        messages.scrollTop = messages.scrollHeight; // Scroll to the bottom
       }
+
+      function updateUserList(users) {
+        userList.innerHTML = ""; // Clear existing list
+        users.forEach((user) => {
+          const userItem = document.createElement("li");
+          userItem.textContent = user;
+          userList.appendChild(userItem);
+        });
+      }
+
+      loginForm.onsubmit = function (event) {
+        event.preventDefault();
+        username = usernameInput.value.trim();
+        if (username) {
+          ws.send(JSON.stringify({ type: "setUsername", username: username }));
+          loginForm.style.display = "none";
+          messageForm.style.display = "block";
+          messages.style.display = "block";
+          setWebSocketMessageHandler();
+        }
+      };
+
+      messageForm.onsubmit = function (event) {
+        event.preventDefault();
+        const message = input.value.trim();
+        if (message) {
+          ws.send(
+            JSON.stringify({
+              type: "message",
+              name: username,
+              message: message,
+            })
+          );
+          input.value = "";
+        }
+      };
     </script>
   </body>
 </html>
